@@ -1,6 +1,6 @@
 {
   "name": "football-rumours",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Football transfer rumours scraper for Glasgow Rangers and Feyenoord",
   "private": true,
   "scripts": {
