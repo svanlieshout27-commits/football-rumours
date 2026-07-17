@@ -17,6 +17,8 @@ export default function Home() {
   const [team, setTeam] = useState('Glasgow Rangers');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [scraping, setScraping] = useState(false);
+  const [scraperMessage, setScraperMessage] = useState('');
 
   useEffect(() => {
     const fetchRumours = async () => {
@@ -46,12 +48,62 @@ export default function Home() {
     rumour.player_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const runScraper = async () => {
+    setScraping(true);
+    setScraperMessage('Running scrapers...');
+    try {
+      const res = await fetch('/api/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || 'your_random_secret_key_12345_abcdef_xyz'}`
+        }
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setScraperMessage('✓ Scrapers completed! Refreshing data...');
+        // Refresh rumours after scraping
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        setScraperMessage('✗ Scraper error. Check console.');
+      }
+    } catch (error) {
+      setScraperMessage('✗ Failed to run scraper');
+      console.error('Scraper error:', error);
+    } finally {
+      setScraping(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">
-          Transfer Rumours
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800">⚽ Transfer Rumours</h1>
+          <button
+            onClick={runScraper}
+            disabled={scraping}
+            className={`px-4 py-2 rounded-lg font-semibold transition ${
+              scraping
+                ? 'bg-gray-400 text-white cursor-not-allowed'
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+          >
+            {scraping ? 'Running...' : '🔄 Run Scraper'}
+          </button>
+        </div>
+
+        {scraperMessage && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            scraperMessage.includes('✓')
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {scraperMessage}
+          </div>
+        )}
 
         <div className="mb-6 flex gap-3">
           {['Glasgow Rangers', 'Feyenoord'].map((t) => (
